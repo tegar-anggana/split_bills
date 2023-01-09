@@ -11,11 +11,15 @@ class Create extends StatefulWidget {
 
 class _CreateState extends State<Create> {
   String date = "";
+  TextEditingController deskripsiController = TextEditingController();
+  TextEditingController totalPriceController = TextEditingController();
+  TextEditingController totalPeopleController = TextEditingController();
+  TextEditingController dateInput = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController dateController =
-        TextEditingController(text: date);
+    // final TextEditingController dateController =
+    //     TextEditingController(text: date);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -55,12 +59,13 @@ class _CreateState extends State<Create> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      const TextField(
+                      TextField(
+                        controller: deskripsiController,
                         autofocus: false,
                         autocorrect: false,
                         textInputAction: TextInputAction.next,
-                        cursorColor: Color(0xff4F103D),
-                        decoration: InputDecoration(
+                        cursorColor: const Color(0xff4F103D),
+                        decoration: const InputDecoration(
                           filled: true,
                           fillColor: Color(0xffFFEFEF),
                           labelText: "Bill Description",
@@ -76,12 +81,14 @@ class _CreateState extends State<Create> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const TextField(
+                      TextField(
+                        controller: totalPriceController,
+                        keyboardType: TextInputType.number,
                         autofocus: false,
                         autocorrect: false,
                         textInputAction: TextInputAction.next,
-                        cursorColor: Color(0xff4F103D),
-                        decoration: InputDecoration(
+                        cursorColor: const Color(0xff4F103D),
+                        decoration: const InputDecoration(
                           filled: true,
                           fillColor: Color(0xffFFEFEF),
                           labelText: "Total Price",
@@ -97,12 +104,14 @@ class _CreateState extends State<Create> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const TextField(
+                      TextField(
+                        controller: totalPeopleController,
+                        keyboardType: TextInputType.number,
                         autofocus: false,
                         autocorrect: false,
                         textInputAction: TextInputAction.next,
-                        cursorColor: Color(0xff4F103D),
-                        decoration: InputDecoration(
+                        cursorColor: const Color(0xff4F103D),
+                        decoration: const InputDecoration(
                           filled: true,
                           fillColor: Color(0xffFFEFEF),
                           labelText: "Total People",
@@ -124,12 +133,16 @@ class _CreateState extends State<Create> {
                             context: context,
                             initialDate: DateTime.now(),
                             firstDate: DateTime.now(),
-                            lastDate: DateTime(2030),
+                            lastDate: DateTime(2100),
                           ).then(
                             (value) {
                               if (value != null) {
+                                String formattedDate =
+                                    DateFormat("d MMMM yyyy", "id_ID")
+                                        .format(value);
                                 setState(() {
-                                  date = DateFormat.yMMMEd().format(value);
+                                  // date = DateFormat.yMMMEd().format(value);
+                                  dateInput.text = formattedDate;
                                 });
                               }
                             },
@@ -139,7 +152,7 @@ class _CreateState extends State<Create> {
                         autocorrect: false,
                         showCursor: false,
                         keyboardType: TextInputType.none,
-                        controller: dateController,
+                        controller: dateInput,
                         textInputAction: TextInputAction.next,
                         cursorColor: const Color(0xff4F103D),
                         decoration: const InputDecoration(
@@ -168,7 +181,12 @@ class _CreateState extends State<Create> {
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => const Detail(),
+                                    builder: (context) => Detail(
+                                      tanggal: dateInput.text,
+                                      deskripsi: deskripsiController.text,
+                                      totalHarga: totalPriceController.text,
+                                      totalOrang: totalPeopleController.text,
+                                    ),
                                   ),
                                 );
                               },

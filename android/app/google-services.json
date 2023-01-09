@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "148319753271",
+    "project_id": "uas-kelompok-1",
+    "storage_bucket": "uas-kelompok-1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:148319753271:android:dc0ec28b750b71c7169bb2",
+        "android_client_info": {
+          "package_name": "com.example.split_bills"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "148319753271-bor3pdo1brelpcfpnar36n1jvk85ftki.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDK3ibObnm_-F9GTEycBgO6UQQOfQt62-o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "148319753271-bor3pdo1brelpcfpnar36n1jvk85ftki.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

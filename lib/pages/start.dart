@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:split_bills/pages/dashboard.dart';
 import 'package:split_bills/pages/login.dart';
 
 class Start extends StatelessWidget {
@@ -78,7 +79,7 @@ class Start extends StatelessWidget {
             onDone: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => const Login(),
+                  builder: (context) => const Dashboard(),
                 ),
               );
             },

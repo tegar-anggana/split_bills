@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:split_bills/currency_format.dart';
 import 'package:split_bills/pages/create.dart';
 import 'package:split_bills/pages/login.dart';
 
@@ -21,113 +23,13 @@ class Dashboard extends StatelessWidget {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CircleAvatar(
                             backgroundColor: Colors.white,
                             radius: 38,
                             child: Image.asset('images/logo.png'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 5),
-                            child: Row(
-                              children: [
-                                const Text(
-                                  "Hi Vinna!",
-                                  style: TextStyle(
-                                    color: Color(0xff4F103D),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: CircleAvatar(
-                                              radius: 60,
-                                              child: Image.asset(
-                                                  'images/profile.png'),
-                                            ),
-                                            content: SizedBox(
-                                              height: 100,
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text(
-                                                    "Vinna Alfiati",
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceAround,
-                                                    children: [
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child:
-                                                            const Text("Back"),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          ScaffoldMessenger.of(
-                                                                  context)
-                                                              .showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                  "Logout Success"),
-                                                              duration:
-                                                                  Duration(
-                                                                      seconds:
-                                                                          2),
-                                                            ),
-                                                          );
-                                                          Navigator.of(context)
-                                                              .pushAndRemoveUntil(
-                                                            MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const Login(),
-                                                            ),
-                                                            ModalRoute.withName(
-                                                                '/'),
-                                                          );
-                                                        },
-                                                        child: const Text(
-                                                          "Logout",
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.red),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                  },
-                                  padding: EdgeInsets.zero,
-                                  icon: const Icon(
-                                    Icons.account_circle,
-                                    size: 50,
-                                    color: Color.fromARGB(255, 255, 185, 185),
-                                  ),
-                                )
-                              ],
-                            ),
                           ),
                         ],
                       ),
@@ -177,57 +79,86 @@ class Dashboard extends StatelessWidget {
                           child: Row(
                             children: [
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: const [
-                                        Text(
-                                          "Total Bill : ",
-                                          style: TextStyle(
-                                            color: Color(0xffFAB786),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          "Rp 750.000",
-                                          style: TextStyle(
-                                            color: Color(0xffFAB786),
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: const [
-                                        Text(
-                                          "Your Total Spending : ",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          "Rp 750.000",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                child: StreamBuilder(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('split_bills')
+                                        .snapshots(),
+                                    builder: (context,
+                                        AsyncSnapshot<QuerySnapshot> snapshot) {
+                                      if (snapshot.hasData) {
+                                        List billsList = [];
+                                        for (var bill in snapshot.data!.docs) {
+                                          billsList.add(bill.data());
+                                        }
+                                        double totalBill = 0;
+                                        double totalYourSpending = 0;
+
+                                        for (var data in billsList) {
+                                          totalBill =
+                                              (totalBill + data['total_harga']);
+                                          totalYourSpending =
+                                              (totalYourSpending +
+                                                  (data['total_harga'] /
+                                                      data['total_orang']));
+                                        }
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  "Total Bill : ",
+                                                  style: TextStyle(
+                                                    color: Color(0xffFAB786),
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      totalBill, 0),
+                                                  style: const TextStyle(
+                                                    color: Color(0xffFAB786),
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  "Your Total Spending : ",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      totalYourSpending, 0),
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        );
+                                      } else {
+                                        return const Text('');
+                                      }
+                                    }),
                               ),
                               Expanded(
                                 child: Center(
@@ -265,522 +196,166 @@ class Dashboard extends StatelessWidget {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 8,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "23 November 2022",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const Text(
-                                          "Makan di ubertos",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const Divider(
-                                          height: 1,
-                                          thickness: 1,
-                                          color: Colors.black,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "Total bills : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 75.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "People : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "5 People",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "You must pay : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 15.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 8,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "23 November 2022",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const Text(
-                                          "Makan di ubertos",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const Divider(
-                                          height: 1,
-                                          thickness: 1,
-                                          color: Colors.black,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "Total bills : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 75.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "People : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "5 People",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "You must pay : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 15.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 8,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "23 November 2022",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const Text(
-                                          "Makan di ubertos",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const Divider(
-                                          height: 1,
-                                          thickness: 1,
-                                          color: Colors.black,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "Total bills : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 75.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "People : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "5 People",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "You must pay : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 15.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 8,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "23 November 2022",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const Text(
-                                          "Makan di ubertos",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const Divider(
-                                          height: 1,
-                                          thickness: 1,
-                                          color: Colors.black,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "Total bills : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 75.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "People : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "5 People",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "You must pay : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 15.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 8,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "23 November 2022",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const Text(
-                                          "Makan di ubertos",
-                                          style: TextStyle(
-                                            color: Color(0xff4F103D),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const Divider(
-                                          height: 1,
-                                          thickness: 1,
-                                          color: Colors.black,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "Total bills : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 75.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "People : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "5 People",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: const [
-                                            Text(
-                                              "You must pay : ",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Rp 15.000",
-                                              style: TextStyle(
-                                                color: Color(0xff4F103D),
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                              ],
-                            ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: StreamBuilder(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('split_bills')
+                                        .snapshots(),
+                                    builder: (context,
+                                        AsyncSnapshot<QuerySnapshot>
+                                            streamSnapshot) {
+                                      if (streamSnapshot.hasData) {
+                                        return ListView.builder(
+                                            itemCount: streamSnapshot
+                                                .data!.docs.length,
+                                            itemBuilder: (BuildContext context,
+                                                int index) {
+                                              final DocumentSnapshot
+                                                  documentSnapshot =
+                                                  streamSnapshot
+                                                      .data!.docs[index];
+                                              return Container(
+                                                margin: const EdgeInsets.only(
+                                                    bottom: 10),
+                                                width: double.infinity,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5),
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 7,
+                                                    vertical: 8,
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        documentSnapshot[
+                                                            'tanggal'],
+                                                        style: const TextStyle(
+                                                          color:
+                                                              Color(0xff4F103D),
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        documentSnapshot[
+                                                            'deskripsi'],
+                                                        style: const TextStyle(
+                                                          color:
+                                                              Color(0xff4F103D),
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                        ),
+                                                      ),
+                                                      const Divider(
+                                                        height: 1,
+                                                        thickness: 1,
+                                                        color: Colors.black,
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          const Text(
+                                                            "Total bills :",
+                                                            style: TextStyle(
+                                                              color: Color(
+                                                                  0xff4F103D),
+                                                              fontSize: 13,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            CurrencyFormat.convertToIdr(
+                                                                documentSnapshot[
+                                                                    'total_harga'],
+                                                                0),
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Color(
+                                                                  0xff4F103D),
+                                                              fontSize: 13,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          const Text(
+                                                            "People : ",
+                                                            style: TextStyle(
+                                                              color: Color(
+                                                                  0xff4F103D),
+                                                              fontSize: 13,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            "${documentSnapshot['total_orang']} People",
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Color(
+                                                                  0xff4F103D),
+                                                              fontSize: 13,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          const Text(
+                                                            "You must pay : ",
+                                                            style: TextStyle(
+                                                              color: Color(
+                                                                  0xff4F103D),
+                                                              fontSize: 13,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            CurrencyFormat.convertToIdr(
+                                                                documentSnapshot[
+                                                                        'total_harga'] /
+                                                                    documentSnapshot[
+                                                                        'total_orang'],
+                                                                0),
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Color(
+                                                                  0xff4F103D),
+                                                              fontSize: 13,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            });
+                                      } else {
+                                        return const Text('');
+                                      }
+                                    }),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
                           ),
                         ),
                       ),
